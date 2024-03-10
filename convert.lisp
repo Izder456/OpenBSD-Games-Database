@@ -1,14 +1,28 @@
 (defstruct entry
-  game cover engine setup runtime store hints genre tags year dev pub version status added updated idgb-id)
+ game cover engine setup runtime store hints genre tags year dev pub version status added updated igdb-id)
 
-(defmacro with-fields ((&rest fields) &body body)
-  `(destructuring-bind ,fields
-       (loop for field in ',fields
-	     collect field)
-     ,@body))
+(defun read-entry (stream)
+ (let ((game (read-line stream))
+        (cover (read-line stream))
+        (engine (read-line stream))
+        (setup (read-line stream))
+        (runtime (read-line stream))
+        (store (read-line stream))
+        (hints (read-line stream))
+        (genre (read-line stream))
+        (tags (read-line stream))
+        (year (parse-integer (read-line stream)))
+        (dev (read-line stream))
+        (pub (read-line stream))
+        (version (read-line stream))
+        (status (parse-integer (read-line stream)))
+        (added (read-line stream))
+        (updated (read-line stream))
+        (igdb-id (parse-integer (read-line stream))))
+    (make-entry :game game :cover cover :engine engine :setup setup :runtime runtime :store store :hints hints :genre genre :tags tags :year year :dev dev :pub pub :version version :status status :added added :updated updated :igdb-id igdb-id)))
 
 (defun entry-to-json (entry)
-  `(json:make-object
+ `(json:make-object
     :game-name ,(string (entry-game entry))
     :cover ,(entry-cover entry)
     :engine ,(entry-engine entry)
@@ -27,37 +41,14 @@
     :updated ,(entry-updated entry)
     :igdb-id ,(entry-igdb-id entry)))
 
-(defmacro read-entry (stream)
-  `(progn
-     (ignore-errors
-      (with-fields (game cover engine setup runtime store hints genre tags year dev pub version status added updated igdb-id)
-	(list
-	 :game (read-line ,stream)
-	 :cover (read-line ,stream)
-	 :engine (read-line ,stream)
-	 :setup (read-line ,stream)
-	 :runtime (read-line ,stream)
-	 :store (read-line ,stream)
-	 :hints (read-line ,stream)
-	 :genre (read-line ,stream)
-	 :tags (read-line ,stream)
-	 :year (parse-integer (read-line ,stream))
-	 :dev (read-line ,stream)
-	 :pub (read-line ,stream)
-	 :version (read-line ,stream)
-	 :status (parse-integer (read-line ,stream))
-	 :added (read-line ,stream)
-	 :updated (read-line ,stream)
-	 :igdb-id (parse-integer (read-line ,stream)))))))
-  
 (defun read-entries (file)
-  (with-open-file (stream file :direction :input)
+ (with-open-file (stream file :direction :input)
     (loop for entry = (read-entry stream)
-	  while entry collect entry)))
+          while entry collect entry)))
 
 (defun write-json-to-file (data file)
-  (with-open-file (stream file :direction :output :if-exists :supersede)
+ (with-open-file (stream file :direction :output :if-exists :supersede)
     (format stream "~a" (json:encode-json data))))
 
 (let ((entries (read-entries "openbsd-games.db")))
-  (write-json-to-file (mapcar #'entry-to-json entries) "openbsd-games.json"))
+ (write-json-to-file (mapcar #'entry-to-json entries) "openbsd-games.json"))
